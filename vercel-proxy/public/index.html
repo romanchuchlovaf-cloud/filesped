@@ -193,11 +193,12 @@
                     `
                 }
                 serverData.innerHTML = `
-                    <div class="info-row"><span class="info-label">Регион:</span><span class="info-value">${info.region}</span></div>
-                    <div class="info-row"><span class="info-label">Страна:</span><span class="info-value">${info.country}</span></div>
-                    <div class="info-row"><span class="info-label">Город:</span><span class="info-value">${info.city}</span></div>
-                    <div class="info-row"><span class="info-label">Часовой пояс:</span><span class="info-value">${info.timezone}</span></div>
-                    <div class="info-row"><span class="info-label">IP клиента:</span><span class="info-value">${info.clientIP}</span></div>
+                    <div class="info-row"><span class="info-label">🖥️ Сервер Vercel:</span><span class="info-value">${info.serverRegion}</span></div>
+                    <div class="info-row" style="height:1px;background:#555;margin:4px 0"></div>
+                    <div class="info-row"><span class="info-label">👤 Твой IP:</span><span class="info-value">${info.clientIP}</span></div>
+                    <div class="info-row"><span class="info-label">👤 Твоя страна:</span><span class="info-value">${info.clientCountry}</span></div>
+                    <div class="info-row"><span class="info-label">👤 Твой город:</span><span class="info-value">${info.clientCity}</span></div>
+                    <div class="info-row"><span class="info-label">👤 Твой часовой пояс:</span><span class="info-value">${info.clientTimezone}</span></div>
                     ${speedHtml}
                 `
             } catch {
