@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Proxy</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #2a2a2a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .server-btn, .speed-btn {
+            position: fixed;
+            right: 20px;
+            padding: 10px 16px;
+            background: #3a3a3a;
+            border: 1px solid #4a4a4a;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        .server-btn { top: 20px; }
+        .speed-btn { top: 60px; }
+        .server-btn:hover, .speed-btn:hover { background: #404040; border-color: #666; }
+        .speed-btn.testing { background: #4a4a4a; cursor: wait; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: #3a3a3a;
+            border: 1px solid #4a4a4a;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            color: #e0e0e0;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #fff; }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #4a4a4a;
+        }
+        .info-label { color: #999; font-size: 14px; }
+        .info-value { color: #e0e0e0; font-size: 14px; font-weight: 500; }
+        .info-value.speed { color: #4ade80; font-weight: 600; }
+
+        .close-btn {
+            margin-top: 16px;
+            width: 100%;
+            padding: 10px;
+            background: #4a4a4a;
+            border: none;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .close-btn:hover { background: #555; }
+
+        .loading { text-align: center; color: #999; padding: 20px; }
+
+        .container { width: 100%; max-width: 600px; }
+
+        .input-wrapper { display: flex; gap: 10px; align-items: center; }
+
+        input[type="url"] {
+            flex: 1;
+            padding: 16px 20px;
+            background: #3a3a3a;
+            border: 1px solid #4a4a4a;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #e0e0e0;
+            transition: all 0.3s;
+        }
+        input[type="url"]:focus { outline: none; border-color: #666; background: #404040; }
+        input[type="url"]::placeholder { color: #888; }
+
+        .download-btn {
+            padding: 16px 24px;
+            background: #3a3a3a;
+            border: 1px solid #4a4a4a;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .download-btn:hover { background: #404040; border-color: #666; }
+    </style>
+</head>
+<body>
+    <button class="server-btn" onclick="showServerInfo()">Server Info</button>
+    <button class="speed-btn" id="speedBtn" onclick="testSpeed()">Test Speed</button>
+
+    <div id="modal" class="modal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">Информация о сервере</div>
+            <div id="serverData" class="loading">Загрузка...</div>
+            <button class="close-btn" onclick="closeModal()">Закрыть</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <form id="downloadForm">
+            <div class="input-wrapper">
+                <input type="url" id="fileUrl" placeholder="URL файла для скачивания" required autofocus>
+                <button type="submit" class="download-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const speedBtn = document.getElementById('speedBtn')
+        let cachedSpeed = null
+
+        document.getElementById('downloadForm').addEventListener('submit', function(e) {
+            e.preventDefault()
+            const fileUrl = document.getElementById('fileUrl').value
+            if (fileUrl) {
+                window.location.href = '/api/download?url=' + encodeURIComponent(fileUrl)
+            }
+        })
+
+        async function testSpeed() {
+            speedBtn.classList.add('testing')
+            speedBtn.textContent = 'Testing...'
+            try {
+                const testSize = 5 * 1024 * 1024
+                const start = performance.now()
+                const response = await fetch('/api/speed-test?size=' + testSize)
+                await response.blob()
+                const duration = (performance.now() - start) / 1000
+                const mbps = ((testSize * 8) / (duration * 1000000)).toFixed(2)
+                const mbPerSec = (testSize / (duration * 1024 * 1024)).toFixed(2)
+                cachedSpeed = { mbps, mbPerSec, duration: duration.toFixed(2) }
+                speedBtn.textContent = mbps + ' Mbps'
+            } catch {
+                speedBtn.textContent = 'Failed'
+                setTimeout(() => speedBtn.textContent = 'Test Speed', 2000)
+            }
+            speedBtn.classList.remove('testing')
+        }
+
+        async function showServerInfo() {
+            document.getElementById('modal').classList.add('active')
+            const serverData = document.getElementById('serverData')
+            serverData.innerHTML = '<div class="loading">Загрузка...</div>'
+            try {
+                const res = await fetch('/api/server-info')
+                const info = await res.json()
+                let speedHtml = ''
+                if (cachedSpeed) {
+                    speedHtml = `
+                        <div class="info-row"><span class="info-label">Скорость:</span><span class="info-value speed">${cachedSpeed.mbps} Mbps (${cachedSpeed.mbPerSec} MB/s)</span></div>
+                        <div class="info-row"><span class="info-label">Время теста:</span><span class="info-value">${cachedSpeed.duration}s</span></div>
+                    `
+                }
+                serverData.innerHTML = `
+                    <div class="info-row"><span class="info-label">Регион:</span><span class="info-value">${info.region}</span></div>
+                    <div class="info-row"><span class="info-label">Страна:</span><span class="info-value">${info.country}</span></div>
+                    <div class="info-row"><span class="info-label">Город:</span><span class="info-value">${info.city}</span></div>
+                    <div class="info-row"><span class="info-label">Часовой пояс:</span><span class="info-value">${info.timezone}</span></div>
+                    <div class="info-row"><span class="info-label">IP клиента:</span><span class="info-value">${info.clientIP}</span></div>
+                    ${speedHtml}
+                `
+            } catch {
+                serverData.innerHTML = '<div class="loading">Ошибка загрузки</div>'
+            }
+        }
+
+        function closeModal(event) {
+            if (!event || event.target === document.getElementById('modal')) {
+                document.getElementById('modal').classList.remove('active')
+            }
+        }
+    </script>
+</body>
+</html>
