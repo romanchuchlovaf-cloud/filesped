@@ -17,76 +17,7 @@
             padding: 20px;
         }
 
-        .server-btn, .speed-btn {
-            position: fixed;
-            right: 20px;
-            padding: 10px 16px;
-            background: #3a3a3a;
-            border: 1px solid #4a4a4a;
-            border-radius: 6px;
-            color: #e0e0e0;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s;
-            z-index: 100;
-        }
-        .server-btn { top: 20px; }
-        .speed-btn { top: 60px; }
-        .server-btn:hover, .speed-btn:hover { background: #404040; border-color: #666; }
-        .speed-btn.testing { background: #4a4a4a; cursor: wait; }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        .modal.active { display: flex; }
-
-        .modal-content {
-            background: #3a3a3a;
-            border: 1px solid #4a4a4a;
-            border-radius: 12px;
-            padding: 24px;
-            max-width: 500px;
-            width: 90%;
-            color: #e0e0e0;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal-header { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #fff; }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #4a4a4a;
-        }
-        .info-label { color: #999; font-size: 14px; }
-        .info-value { color: #e0e0e0; font-size: 14px; font-weight: 500; }
-        .info-value.speed { color: #4ade80; font-weight: 600; }
-
-        .close-btn {
-            margin-top: 16px;
-            width: 100%;
-            padding: 10px;
-            background: #4a4a4a;
-            border: none;
-            border-radius: 6px;
-            color: #e0e0e0;
-            font-size: 14px;
-            cursor: pointer;
-        }
-        .close-btn:hover { background: #555; }
-
-        .loading { text-align: center; color: #999; padding: 20px; }
-
-        .container { width: 100%; max-width: 600px; }
+        .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 12px; }
 
         .input-wrapper { display: flex; gap: 10px; align-items: center; }
 
@@ -104,7 +35,7 @@
         input[type="url"]::placeholder { color: #888; }
 
         .download-btn {
-            padding: 16px 24px;
+            padding: 16px 20px;
             background: #3a3a3a;
             border: 1px solid #4a4a4a;
             border-radius: 8px;
@@ -112,30 +43,91 @@
             font-size: 20px;
             cursor: pointer;
             transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
+            white-space: nowrap;
         }
         .download-btn:hover { background: #404040; border-color: #666; }
+        .download-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Серверные карточки */
+        .servers { display: flex; gap: 10px; }
+
+        .server-card {
+            flex: 1;
+            padding: 12px 16px;
+            background: #3a3a3a;
+            border: 1px solid #4a4a4a;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .server-card:hover { background: #404040; border-color: #666; }
+        .server-card.selected { border-color: #4ade80; background: #2d3d2d; }
+        .server-card.auto { border-color: #60a5fa; background: #1e2d3d; }
+        .server-card.testing { opacity: 0.6; }
+
+        .server-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .server-speed {
+            font-size: 12px;
+            color: #888;
+        }
+        .server-speed.fast { color: #4ade80; }
+        .server-speed.slow { color: #f87171; }
+        .server-speed.testing { color: #fbbf24; }
+
+        .badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #4ade80;
+            color: #1a1a1a;
+            font-weight: 700;
+        }
+        .badge.auto { background: #60a5fa; }
+
+        .status-bar {
+            font-size: 13px;
+            color: #888;
+            text-align: center;
+            min-height: 20px;
+        }
+        .status-bar.ok { color: #4ade80; }
+        .status-bar.err { color: #f87171; }
     </style>
 </head>
 <body>
-    <button class="server-btn" onclick="showServerInfo()">Server Info</button>
-    <button class="speed-btn" id="speedBtn" onclick="testSpeed()">Test Speed</button>
-
-    <div id="modal" class="modal" onclick="closeModal(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">Информация о сервере</div>
-            <div id="serverData" class="loading">Загрузка...</div>
-            <button class="close-btn" onclick="closeModal()">Закрыть</button>
-        </div>
-    </div>
-
     <div class="container">
+        <!-- Серверные карточки -->
+        <div class="servers">
+            <div class="server-card" id="card-auto" onclick="selectServer('auto')">
+                <div class="server-name">⚡ Авто <span class="badge auto" id="badge-auto" style="display:none">ВЫБРАН</span></div>
+                <div class="server-speed" id="speed-auto">Выбирает лучший</div>
+            </div>
+            <div class="server-card" id="card-vercel" onclick="selectServer('vercel')">
+                <div class="server-name">▲ Vercel <span class="badge" id="badge-vercel" style="display:none">ВЫБРАН</span></div>
+                <div class="server-speed testing" id="speed-vercel">Тестирование...</div>
+            </div>
+            <div class="server-card" id="card-cf" onclick="selectServer('cf')">
+                <div class="server-name">☁️ Cloudflare <span class="badge" id="badge-cf" style="display:none">ВЫБРАН</span></div>
+                <div class="server-speed testing" id="speed-cf">Тестирование...</div>
+            </div>
+        </div>
+
+        <!-- Форма -->
         <form id="downloadForm">
             <div class="input-wrapper">
                 <input type="url" id="fileUrl" placeholder="URL файла для скачивания" required autofocus>
-                <button type="submit" class="download-btn">
+                <button type="submit" class="download-btn" id="dlBtn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
@@ -144,73 +136,140 @@
                 </button>
             </div>
         </form>
+
+        <div class="status-bar" id="statusBar">Тестируем серверы...</div>
     </div>
 
     <script>
-        const speedBtn = document.getElementById('speedBtn')
-        let cachedSpeed = null
+        // ====== НАСТРОЙКИ ======
+        // Замени на свой Cloudflare Worker URL
+        const CF_URL = 'https://file-proxy.YOUR_SUBDOMAIN.workers.dev'
+        const VERCEL_URL = '' // пусто = текущий домен (Vercel)
+        const TEST_SIZE = 2 * 1024 * 1024 // 2MB для теста
+
+        // ====== СОСТОЯНИЕ ======
+        let selectedServer = 'auto'
+        let speeds = { vercel: null, cf: null }
+        let bestServer = 'vercel' // дефолт пока не протестировали
+
+        // ====== ВЫБОР СЕРВЕРА ======
+        function selectServer(name) {
+            selectedServer = name
+            document.querySelectorAll('.server-card').forEach(c => {
+                c.classList.remove('selected', 'auto')
+            })
+            document.querySelectorAll('.badge').forEach(b => b.style.display = 'none')
+
+            const card = document.getElementById('card-' + name)
+            card.classList.add(name === 'auto' ? 'auto' : 'selected')
+            document.getElementById('badge-' + name).style.display = 'inline'
+        }
+
+        // ====== ТЕСТ СКОРОСТИ ======
+        async function testServer(name, testUrl) {
+            const el = document.getElementById('speed-' + name)
+            el.className = 'server-speed testing'
+            el.textContent = 'Тестирование...'
+
+            const DURATION = 10000
+            const CHUNK = 3 * 1024 * 1024
+            let totalBytes = 0
+            let rounds = 0
+            const deadline = performance.now() + DURATION
+
+            try {
+                const probe = await fetch(testUrl + '/api/speed-test?size=65536', { cache: 'no-store' })
+                if (!probe.ok) throw new Error()
+                await probe.blob()
+
+                const start = performance.now()
+
+                while (performance.now() < deadline) {
+                    const res = await fetch(testUrl + '/api/speed-test?size=' + CHUNK + '&r=' + rounds, { cache: 'no-store' })
+                    if (!res.ok) break
+                    await res.blob()
+                    totalBytes += CHUNK
+                    rounds++
+
+                    const elapsed = (performance.now() - start) / 1000
+                    const mbps = ((totalBytes * 8) / (elapsed * 1e6)).toFixed(1)
+                    el.textContent = mbps + ' Mbps (' + Math.round(elapsed) + 's)'
+                }
+
+                const elapsed = (performance.now() - start) / 1000
+                const mbps = ((totalBytes * 8) / (elapsed * 1e6)).toFixed(1)
+                speeds[name] = parseFloat(mbps)
+                el.className = 'server-speed fast'
+                el.textContent = mbps + ' Mbps'
+                return parseFloat(mbps)
+            } catch (e) {
+                speeds[name] = 0
+                el.className = 'server-speed slow'
+                el.textContent = 'Недоступен'
+                return 0
+            }
+        }
+
+        async function runTests() {
+            const statusBar = document.getElementById('statusBar')
+            statusBar.textContent = 'Тестируем серверы...'
+            statusBar.className = 'status-bar'
+
+            // Тестируем параллельно
+            const [vSpeed, cfSpeed] = await Promise.all([
+                testServer('vercel', VERCEL_URL),
+                testServer('cf', CF_URL)
+            ])
+
+            // Определяем лучший
+            if (vSpeed === 0 && cfSpeed === 0) {
+                statusBar.textContent = 'Оба сервера недоступны'
+                statusBar.className = 'status-bar err'
+                return
+            }
+
+            bestServer = vSpeed >= cfSpeed ? 'vercel' : 'cf'
+            const bestName = bestServer === 'vercel' ? 'Vercel' : 'Cloudflare'
+            const bestSpeed = Math.max(vSpeed, cfSpeed)
+
+            // Обновляем авто карточку
+            document.getElementById('speed-auto').textContent = `${bestName} — ${bestSpeed} Mbps`
+            document.getElementById('speed-auto').className = 'server-speed fast'
+
+            statusBar.textContent = `Лучший сервер: ${bestName} (${bestSpeed} Mbps)`
+            statusBar.className = 'status-bar ok'
+        }
+
+        // ====== СКАЧИВАНИЕ ======
+        function getDownloadUrl(fileUrl) {
+            let server = selectedServer
+            if (server === 'auto') server = bestServer
+
+            if (server === 'vercel') {
+                return (VERCEL_URL || '') + '/api/download?url=' + encodeURIComponent(fileUrl)
+            } else {
+                return CF_URL + '/download?url=' + encodeURIComponent(fileUrl)
+            }
+        }
 
         document.getElementById('downloadForm').addEventListener('submit', function(e) {
             e.preventDefault()
-            const fileUrl = document.getElementById('fileUrl').value
-            if (fileUrl) {
-                window.location.href = '/api/download?url=' + encodeURIComponent(fileUrl)
-            }
+            const fileUrl = document.getElementById('fileUrl').value.trim()
+            if (!fileUrl) return
+
+            const dlUrl = getDownloadUrl(fileUrl)
+            const serverName = (selectedServer === 'auto' ? 'авто → ' : '') +
+                (selectedServer === 'cf' || (selectedServer === 'auto' && bestServer === 'cf') ? 'Cloudflare' : 'Vercel')
+
+            document.getElementById('statusBar').textContent = `Качаем через ${serverName}...`
+            document.getElementById('statusBar').className = 'status-bar ok'
+
+            window.location.href = dlUrl
         })
 
-        async function testSpeed() {
-            speedBtn.classList.add('testing')
-            speedBtn.textContent = 'Testing...'
-            try {
-                const testSize = 5 * 1024 * 1024
-                const start = performance.now()
-                const response = await fetch('/api/speed-test?size=' + testSize)
-                await response.blob()
-                const duration = (performance.now() - start) / 1000
-                const mbps = ((testSize * 8) / (duration * 1000000)).toFixed(2)
-                const mbPerSec = (testSize / (duration * 1024 * 1024)).toFixed(2)
-                cachedSpeed = { mbps, mbPerSec, duration: duration.toFixed(2) }
-                speedBtn.textContent = mbps + ' Mbps'
-            } catch {
-                speedBtn.textContent = 'Failed'
-                setTimeout(() => speedBtn.textContent = 'Test Speed', 2000)
-            }
-            speedBtn.classList.remove('testing')
-        }
-
-        async function showServerInfo() {
-            document.getElementById('modal').classList.add('active')
-            const serverData = document.getElementById('serverData')
-            serverData.innerHTML = '<div class="loading">Загрузка...</div>'
-            try {
-                const res = await fetch('/api/server-info')
-                const info = await res.json()
-                let speedHtml = ''
-                if (cachedSpeed) {
-                    speedHtml = `
-                        <div class="info-row"><span class="info-label">Скорость:</span><span class="info-value speed">${cachedSpeed.mbps} Mbps (${cachedSpeed.mbPerSec} MB/s)</span></div>
-                        <div class="info-row"><span class="info-label">Время теста:</span><span class="info-value">${cachedSpeed.duration}s</span></div>
-                    `
-                }
-                serverData.innerHTML = `
-                    <div class="info-row"><span class="info-label">🖥️ Сервер Vercel:</span><span class="info-value">${info.serverRegion}</span></div>
-                    <div class="info-row" style="height:1px;background:#555;margin:4px 0"></div>
-                    <div class="info-row"><span class="info-label">👤 Твой IP:</span><span class="info-value">${info.clientIP}</span></div>
-                    <div class="info-row"><span class="info-label">👤 Твоя страна:</span><span class="info-value">${info.clientCountry}</span></div>
-                    <div class="info-row"><span class="info-label">👤 Твой город:</span><span class="info-value">${info.clientCity}</span></div>
-                    <div class="info-row"><span class="info-label">👤 Твой часовой пояс:</span><span class="info-value">${info.clientTimezone}</span></div>
-                    ${speedHtml}
-                `
-            } catch {
-                serverData.innerHTML = '<div class="loading">Ошибка загрузки</div>'
-            }
-        }
-
-        function closeModal(event) {
-            if (!event || event.target === document.getElementById('modal')) {
-                document.getElementById('modal').classList.remove('active')
-            }
-        }
+        // ====== ИНИТ ======
+        selectServer('auto') // авто выбран по умолчанию
+        runTests()           // запускаем тесты сразу
     </script>
 </body>
 </html>

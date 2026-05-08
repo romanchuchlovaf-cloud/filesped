@@ -9,15 +9,15 @@ export default async function handler(req) {
 
   const info = {
     // Данные СЕРВЕРА Vercel
-    serverRegion: process.env.VERCEL_REGION || 'fra1',
+    region: process.env.VERCEL_REGION || 'fra1',
 
     // Данные КЛИЕНТА (тебя)
     clientIP,
-    clientCountry: req.headers.get('x-vercel-ip-country') || 'Unknown',
-    clientCity: decodeURIComponent(req.headers.get('x-vercel-ip-city') || 'Unknown'),
-    clientTimezone: req.headers.get('x-vercel-ip-timezone') || 'Unknown',
-    clientLatitude: req.headers.get('x-vercel-ip-latitude') || 'Unknown',
-    clientLongitude: req.headers.get('x-vercel-ip-longitude') || 'Unknown',
+    country: req.headers.get('x-vercel-ip-country') || 'Unknown',
+    city: decodeURIComponent(req.headers.get('x-vercel-ip-city') || 'Unknown'),
+    timezone: req.headers.get('x-vercel-ip-timezone') || 'Unknown',
+    latitude: req.headers.get('x-vercel-ip-latitude') || 'Unknown',
+    longitude: req.headers.get('x-vercel-ip-longitude') || 'Unknown',
 
     userAgent: req.headers.get('user-agent') || 'Unknown',
   }
